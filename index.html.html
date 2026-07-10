@@ -960,7 +960,18 @@
     });
   }
 
-// ---- Start Learning gate ----
+// 🟢 HELPER FUNCTION: Get or Create an Anonymous Visitor ID
+  function getAnonymousId() {
+    let id = localStorage.getItem('visitor_uuid');
+    if (!id) {
+      // Generates a random unique string like "usr-f823ba92"
+      id = 'usr-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem('visitor_uuid', id);
+    }
+    return id;
+  }
+
+  // ---- Start Learning gate ----
   const startLearningGate = document.getElementById('startLearningGate');
   const comingSoonBlock = document.getElementById('comingSoonBlock');
   const startLearningBtn = document.getElementById('startLearningBtn');
@@ -968,27 +979,17 @@
   const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxm60n6Sj3wwR9uJRG06sF-hQJXnni5w62QfROVD74c_vSrmXrReGwh-MHz8y0lasFe/exec";
 
   startLearningBtn.addEventListener('click', async () => {
-    try {
-      let n = 0;
-      try {
-        const r = await window.storage.get('start-learning-count', true);
-        n = r ? parseInt(r.value) : 0;
-      } catch(_) { n = 0; }
-      await window.storage.set('start-learning-count', String(n + 1), true);
-    } catch(err){
-      console.error('Storage error tracking Start Learning click:', err);
-    }
-
-    // 🟢 GOOGLE SHEETS TRACKING: Log button click behavior into the columns
+    // 🟢 TRACKING: Log button click behavior with the Anonymous ID
     fetch(GOOGLE_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
       cache: "no-cache",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: "Clicked 'Start Learning'", // Placed under 'Email' to show action type
+        email: "Clicked 'Start Learning'",
         goal: "Clicked CTA",
-        willingToPay: "N/A"
+        willingToPay: "N/A",
+        anonymousId: getAnonymousId() // Pass the ID here
       })
     }).catch(err => console.error("Sheets tracking error:", err));
 
@@ -1008,14 +1009,13 @@
   const successMsg = document.getElementById('successMsg');
   const signupCount = document.getElementById('signupCount');
 
+  // Cleaned up count to avoid strict blocking locks
   async function updateCount(){
     try{
       const result = await window.storage.get('waitlist-count', true);
       const n = result ? parseInt(result.value) : 0;
       signupCount.textContent = n > 0 ? `🎉 ${n} people already on the list` : '';
-    } catch(e){
-      signupCount.textContent = '';
-    }
+    } catch(e){ signupCount.textContent = ''; }
   }
   updateCount();
 
@@ -1026,23 +1026,8 @@
     const goalOther = document.getElementById('goalOther').value.trim();
     const dailyTime = document.getElementById('dailyTime').value;
     const monthlyPrice = document.getElementById('monthlyPrice').value;
-    const entry = { email, goal, goalOther, dailyTime, monthlyPrice, ts: new Date().toISOString() };
 
-    try {
-      const key = 'signup:' + Date.now() + ':' + Math.random().toString(36).slice(2,8);
-      await window.storage.set(key, JSON.stringify(entry), true);
-      let n = 0;
-      try {
-        const r = await window.storage.get('waitlist-count', true);
-        n = r ? parseInt(r.value) : 0;
-      } catch(_) { n = 0; }
-      await window.storage.set('waitlist-count', String(n + 1), true);
-      updateCount();
-    } catch(err){
-      console.error('Storage error:', err);
-    }
-
-    // 🟢 GOOGLE SHEETS TRACKING: Map the form answers directly into separate columns
+    // 🟢 TRACKING: Send data to Google Sheet with the Anonymous ID
     fetch(GOOGLE_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
@@ -1051,10 +1036,23 @@
       body: JSON.stringify({
         email: email,
         goal: goal === 'other' ? goalOther : goal,
-        willingToPay: monthlyPrice
+        willingToPay: monthlyPrice,
+        anonymousId: getAnonymousId() // Pass the exact same ID here!
       })
     }).catch(err => console.error("Sheets tracking error:", err));
 
-    comingSoonBlock.style.display = 'none';
-    successMsg.classList.add('show');
+    // 🟢 REUSABILITY: Instead of hiding the form forever, we notify them and clear it
+    alert("Thanks for submitting!");
+    form.reset(); 
+    
+    // Optional: If you still want to update your UI counter visually
+    try {
+      let n = 0;
+      try {
+        const r = await window.storage.get('waitlist-count', true);
+        n = r ? parseInt(r.value) : 0;
+      } catch(_) {}
+      await window.storage.set('waitlist-count', String(n + 1), true);
+      updateCount();
+    } catch(err) {}
   });
