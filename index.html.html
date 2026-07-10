@@ -965,7 +965,6 @@
   const comingSoonBlock = document.getElementById('comingSoonBlock');
   const startLearningBtn = document.getElementById('startLearningBtn');
 
-  // 🔴 CHANGE THIS TO YOUR ACTUAL GOOGLE WEB APP URL
   const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxm60n6Sj3wwR9uJRG06sF-hQJXnni5w62QfROVD74c_vSrmXrReGwh-MHz8y0lasFe/exec";
 
   startLearningBtn.addEventListener('click', async () => {
@@ -980,15 +979,16 @@
       console.error('Storage error tracking Start Learning click:', err);
     }
 
-    // 🟢 GOOGLE SHEETS TRACKING: Log the "Start Learning" Button Click
+    // 🟢 GOOGLE SHEETS TRACKING: Log button click behavior into the columns
     fetch(GOOGLE_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
       cache: "no-cache",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        action: "Start Learning Clicked",
-        details: "User clicked the initial CTA button"
+        email: "Clicked 'Start Learning'", // Placed under 'Email' to show action type
+        goal: "Clicked CTA",
+        willingToPay: "N/A"
       })
     }).catch(err => console.error("Sheets tracking error:", err));
 
@@ -1042,22 +1042,19 @@
       console.error('Storage error:', err);
     }
 
-    // 🟢 GOOGLE SHEETS TRACKING: Send full form data to Google Sheet
+    // 🟢 GOOGLE SHEETS TRACKING: Map the form answers directly into separate columns
     fetch(GOOGLE_WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
       cache: "no-cache",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        action: "Form Submitted",
-        details: `Email: ${email} | Goal: ${goal === 'other' ? goalOther : goal} | Time: ${dailyTime} | Price: ${monthlyPrice}`
+        email: email,
+        goal: goal === 'other' ? goalOther : goal,
+        willingToPay: monthlyPrice
       })
     }).catch(err => console.error("Sheets tracking error:", err));
 
     comingSoonBlock.style.display = 'none';
     successMsg.classList.add('show');
   });
-</script>
-
-</body>
-</html>
