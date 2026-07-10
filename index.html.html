@@ -963,7 +963,7 @@
   // ---- Google Sheets backend ----
   // Paste your Apps Script Web App URL here (see google-sheets-backend.gs.txt for setup steps).
   // It will look like: https://script.google.com/macros/s/AKfycb.../exec
-  const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxm60n6Sj3wwR9uJRG06sF-hQJXnni5w62QfROVD74c_vSrmXrReGwh-MHz8y0lasFe/exec";
+  const SHEET_WEBAPP_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 
   // A persistent per-device ID, so a "Start Learning" click and a later
   // waitlist submission from the same person land in the SAME sheet row.
@@ -1006,6 +1006,12 @@
       console.error('Error sending data to Google Sheet:', err);
     }
   }
+
+  // ---- Page view tracking ----
+  // Fires once per page load. This is a raw visit counter (includes repeat
+  // visits from the same browser) — for unique-visitor/referrer breakdowns,
+  // pair this with Vercel Analytics.
+  sendToSheet({ type: 'page_view', userId: inciUserId, ts: new Date().toISOString() });
 
   // ---- Start Learning gate ----
   const startLearningGate = document.getElementById('startLearningGate');
